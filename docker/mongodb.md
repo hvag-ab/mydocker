@@ -1,0 +1,51 @@
+docker pull  mongo:4.1.6   //:4.1.6    为版本标签也可使用 docker pull mongo 获取最新版本
+docker images 
+
+
+## 运行容器示
+
+```bash
+docker run  \
+--name mongodb_server \
+  -p 27017:27017 \
+  -v $HOME/_docker/mongodb/configdb:/data/configdb \
+  -v $HOME/_docker/mysoft/mongodb/db/:/data/db \
+  -d mongo #-d表示后台运行mysql
+```
+注意 一定要添加$HOME/ 否则无权限 对于os x
+
+docker ps 查看mongo 容器是否运行
+
+命令说明：
+1.docker container run ：启动一个容器并运行。以前版本直接用docker run，后来我估计是为了更细分职责，docker添加了manager command，即docker container，docker image等等。这样符合了模块化的思想，职责更明确（个人想法）。
+2. -p 27017:27017 ：宿主机的27017端口与容器的27017端口进行绑定。这样外部可以通过访问宿主机的27017端口进而访问到容器中的27017端口。
+3 -v 数据卷绑定
+5. name mongodb_server ：设置容器的名称mongodb_server。注意：容器名称是唯一的。
+6. -d mongo ：告诉容器在后台守护进程方式运行 mongo。
+
+进入容器
+docker exec -it mongodb_server  /bin/bash  bash环境
+docker exec -it <container_name/container_id> mongo  mongo交互环境
+
+mongodb的认证约束
+采用上述创建mongodb的容器默认是没有认证约束的，也就是说该mongo容器没有账号和密码，只要是知道地址和端口号就可以访问进入数据库。
+我们就要对数据库添加认证约束：
+在启动容器时添加--auth参数
+docker run --name <container_name> -d mongo --auth
+docker exec -it <container_name> mongo admin
+db.createUser({user:"username",pwd:"ini_password",roles:[{role:"userAdminAnyDatabase",db:"admin"}]})
+
+
+命令说明：
+docker container exec 进入容器
+
+-t 让docker分配一个伪终端，并绑定到容器的标准输入上
+
+-i 让容器的标准输入保持打开
+
+mongodb 是容器的名字
+
+**这时你会进入容器的终端界面
+
+获取容器port
+docker port mongodb
