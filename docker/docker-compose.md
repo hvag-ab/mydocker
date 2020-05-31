@@ -118,6 +118,8 @@ docker-compose up 启动
 
 docker-compose up --build 构建启动
 
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d 同时运行多个yml文件
+
 ## 实战
 使用docker-compose构建一个python-web app
 创建一个文件夹 python-web-app
