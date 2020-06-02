@@ -26,6 +26,10 @@ services:
 $ docker-compose up -d
 打开  http://localhost:4444/grid/console 查看 是否正确
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium import webdriver
+from time import sleep
+
+
 def get_driver():
     # initialize options
     caps = {'browserName': os.getenv('BROWSER', 'chrome')}
@@ -39,3 +43,20 @@ def get_driver():
                 desired_capabilities=caps
     return driver
 
+from selenium import webdriver
+from time import sleep
+
+driver = get_driver()
+
+driver.get('https://www.baidu.com')
+print("get baidu")
+
+driver.find_element_by_id("kw").send_keys("docker selenium")
+driver.find_element_by_id("su").click()
+
+sleep(1)
+
+driver.get_screenshot_as_file("/home/fnngj/mypro/baidu_img.png")
+
+driver.quit()
+print("end...")
