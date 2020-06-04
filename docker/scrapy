@@ -86,8 +86,41 @@ docker exec -it d3a0aeaa9617 /bin/bash 进入容器
 cd data   就可以在里面运行scrapy了 scrapy crawl xx
 
 
+scrapy_redis 
 
+Dockerfile
+FROM python:3.5
+ENV PATH /usr/local/bin:$PATH
+ADD . /code
+WORKDIR /code
+RUN pip install -r requirements.txt
+COPY spiders.py /usr/local/lib/python3.5/site-packages/scrapy_redis
+CMD /usr/local/bin/scrapy crawl itjuzi_di
 
+docker-compose.yml
+version: '2'
+services:
+  spider:
+    build: .
+    volumes:
+     - .:/code
+    links:
+     - redis
+    depends_on:
+     - redis
+  redis:
+    image: redis
+    ports:
+    - "6379:6379"
+ 
+ 开始部署
+启动 container
+
+docker-compose up #从 docker-compose.yml 中创建 `container` 们
+docker-compose scale spider=4 #将 spider 这一个服务扩展到4个，还是同一个 redis
+
+现在给 redis 中放入 start_urls:
+lpush itjuziCrawler:start_urls http://www.itjuzi.com/company
 
 
 
