@@ -1,0 +1,99 @@
+vi docker-compose.yml
+
+version: '2'
+services:
+    fastdfs-tracker:
+        hostname: fastdfs-tracker
+        container_name: fastdfs-tracker
+        image: season/fastdfs:1.2
+        network_mode: "host"
+        command: tracker
+        volumes:
+          - ./tracker_data:/fastdfs/tracker/data
+    fastdfs-storage:
+        hostname: fastdfs-storage
+        container_name: fastdfs-storage
+        image: season/fastdfs:1.2
+        network_mode: "host"
+        volumes:
+          - ./storage_data:/fastdfs/storage/data
+          - ./store_path:/fastdfs/store_path
+        environment:
+          - TRACKER_SERVER=xxx.xxx.xxx.xxx:22122
+        command: storage
+        depends_on:
+          - fastdfs-tracker
+    fastdfs-nginx:
+        hostname: fastdfs-nginx
+        container_name: fastdfs-nginx
+        image: season/fastdfs:1.2
+        network_mode: "host"
+        volumes:
+          - ./nginx.conf:/etc/nginx/conf/nginx.conf
+          - ./store_path:/fastdfs/store_path
+        environment:
+          - TRACKER_SERVER=xxx.xxx.xxx.xxx:22122
+        command: nginx
+        
+ 需要注意:
+network_mode 必须是host, 原因是当上传文件时，tracker会把storage的IP和端口发给client，如果是bridge模式，则发送的是内网IP，client无法访问到。
+image采用season/fastdfs:1.2 不要用lastest, 因为lastest不包含nginx服务，其他fasdfs镜像均没有season的精简。
+        
+ nginx.conf
+ 
+ #user  nobody;
+worker_processes  1;
+ 
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+ 
+#pid        logs/nginx.pid;
+ 
+ 
+events {
+    worker_connections  1024;
+}
+ 
+ 
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+ 
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+ 
+    #access_log  logs/access.log  main;
+ 
+    sendfile        on;
+    #tcp_nopush     on;
+ 
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+ 
+    #gzip  on;
+ 
+    server {
+        listen       7003;
+        server_name  localhost;
+ 
+        #charset koi8-r;
+ 
+        #access_log  logs/host.access.log  main;
+ 
+        location /group1/M00 {
+            root /fastdfs/storage/data;
+            ngx_fastdfs_module;
+        }
+ 
+        #error_page  404              /404.html;
+ 
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+ }
+}
