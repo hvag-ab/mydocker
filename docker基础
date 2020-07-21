@@ -1,0 +1,458 @@
+
+Docker 是一个开源的应用容器引擎，而一个<ruby>容器<rt>containers</rt></ruby>其实是一个虚拟化的独立的环境，让开发者可以打包他们的应用以及依赖包到一个可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。容器是完全使用沙箱机制，相互之间不会有任何接口。
+
+
+## centos 安装
+Docker 要求 CentOS 系统的内核版本高于 3.10 ，查看本页面的前提条件来验证你的CentOS 版本是否支持 Docker 。
+通过 uname -r 命令查看你当前的内核版本
+ $ uname -r
+2、使用 root 权限登录 Centos。确保 yum 包更新到最新。
+$ sudo yum update
+3、卸载旧版本(如果安装过旧版本的话)
+$ sudo yum remove docker  docker-common docker-selinux docker-engine
+4、安装需要的软件包， yum-util 提供yum-config-manager功能，另外两个是devicemapper驱动依赖的
+$ sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+5、设置yum源
+$ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+添加软件源信息
+```bash
+# docker 官方源
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# 阿里云源
+sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+```
+6、可以查看所有仓库中所有docker版本，并选择特定版本安装
+$ yum list docker-ce --showduplicates | sort -r
+7、安装docker
+$ sudo yum install docker-ce  #由于repo中默认只开启stable仓库，故这里安装的是最新稳定版17.12.0
+$ sudo yum install <FQPN>  # 例如：sudo yum install docker-ce-17.12.0.ce
+8、启动并加入开机启动
+$ sudo systemctl start docker
+$ sudo systemctl enable docker
+9、验证安装是否成功(有client和service两部分表示docker安装启动都成功了)
+$ docker version
+
+
+Docker 官方的安装教程，[在这里](https://docs.docker.com/install/linux/docker-ce/centos/)。
+
+## ubuntu安装
+
+```bash
+sudo apt-get remove docker docker-engine docker-ce docker.io  由于apt官方库里的docker版本可能比较旧，所以先卸载可能存在的旧版本：
+sudo apt-get update 更新apt包索引：
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common 安装以下包以使apt可以通过HTTPS使用存储库（repository）：
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -  添加Docker官方的GPG密钥
+sudo apt-key fingerprint 0EBFCD88
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get install -y docker-ce
+systemctl status docker 查看是否启动
+sudo systemctl start docker 启动docker服务
+
+# 可以获得自己的加速器 https://××××××.mirror.aliyuncs.com
+
+# echo "DOCKER_OPTS=\"--registry-mirror=https://××××××.mirror.aliyuncs.com\"" | sudo tee -a /etc/default/docker
+
+# sudo systemctl docker restart
+# docker info 查看
+#=====================
+
+
+## 命令介绍
+
+```bash
+$ docker --help
+
+管理命令:
+  container   管理容器
+  image       管理镜像
+  network     管理网络
+命令：
+  attach      介入到一个正在运行的容器
+  build       根据 Dockerfile 构建一个镜像
+  commit      根据容器的更改创建一个新的镜像
+  cp          在本地文件系统与容器中复制 文件/文件夹
+  create      创建一个新容器
+  exec        在容器中执行一条命令
+  images      列出镜像
+  kill        杀死一个或多个正在运行的容器    
+  logs        取得容器的日志
+  pause       暂停一个或多个容器的所有进程
+  ps          列出所有容器
+  pull        拉取一个镜像或仓库到 registry
+  push        推送一个镜像或仓库到 registry
+  rename      重命名一个容器
+  restart     重新启动一个或多个容器
+  rm          删除一个或多个容器
+  rmi         删除一个或多个镜像
+  run         在一个新的容器中执行一条命令
+  search      在 Docker Hub 中搜索镜像
+  start       启动一个或多个已经停止运行的容器
+  stats       显示一个容器的实时资源占用
+  stop        停止一个或多个正在运行的容器
+  tag         为镜像创建一个新的标签
+  top         显示一个容器内的所有进程
+  unpause     恢复一个或多个容器内所有被暂停的进程
+```
+$ docker run 命令运行容器参数
+```bash
+-d, --detach=false      # 指定容器运行于前台还是后台，默认为false   
+-i, --interactive=false # 打开STDIN，用于控制台交互  
+-t, --tty=false         # 分配tty设备，该可以支持终端登录，默认为false  
+-u, --user=""           # 指定容器的用户  
+-a, --attach=[]         # 登录容器（必须是以docker run -d启动的容器）
+-w, --workdir=""        # 指定容器的工作目录 
+-c, --cpu-shares=0      # 设置容器CPU权重，在CPU共享场景使用  
+-e, --env=[]            # 指定环境变量，容器中可以使用该环境变量  
+-m, --memory=""         # 指定容器的内存上限  
+-P, --publish-all=false # 指定容器暴露的端口  
+-p, --publish=[]        # 指定容器暴露的端口 
+-h, --hostname=""       # 指定容器的主机名  
+-v, --volume=[]         # 给容器挂载存储卷，挂载到容器的某个目录  
+--volumes-from=[]       # 给容器挂载其他容器上的卷，挂载到容器的某个目录
+--cap-add=[]            # 添加权限，权限清单详见：http://linux.die.net/man/7/capabilities  
+--cap-drop=[]           # 删除权限，权限清单详见：http://linux.die.net/man/7/capabilities  
+--cidfile=""            # 运行容器后，在指定文件中写入容器PID值，一种典型的监控系统用法  
+--cpuset=""             # 设置容器可以使用哪些CPU，此参数可以用来容器独占CPU  
+--device=[]             # 添加主机设备给容器，相当于设备直通  
+--dns=[]                # 指定容器的dns服务器  
+--dns-search=[]         # 指定容器的dns搜索域名，写入到容器的/etc/resolv.conf文件  
+--entrypoint=""         # 覆盖image的入口点  
+--env-file=[]           # 指定环境变量文件，文件格式为每行一个环境变量  
+--expose=[]             # 指定容器暴露的端口，即修改镜像的暴露端口  
+--link=[]               # 指定容器间的关联，使用其他容器的IP、env等信息  
+--lxc-conf=[]           # 指定容器的配置文件，只有在指定--exec-driver=lxc时使用  
+--name=""               # 指定容器名字，后续可以通过名字进行容器管理，links特性需要使用名字  
+--net="bridge"          # 容器网络设置:
+                            # bridge 使用docker daemon指定的网桥     
+                            # host 	//容器使用主机的网络  
+                            # container:NAME_or_ID  >//使用其他容器的网路，共享IP和PORT等网络资源  
+                            # none 容器使用自己的网络（类似--net=bridge），但是不进行配置 
+--privileged=false      # 指定容器是否为特权容器，特权容器拥有所有的capabilities  
+--restart="no"          # 指定容器停止后的重启策略:
+                            # no：容器退出时不重启  
+                            # on-failure：容器故障退出（返回值非零）时重启 
+                            # always：容器退出时总是重启  
+--rm=false              # 指定容器停止后自动删除容器(不支持以docker run -d启动的容器)  
+--sig-proxy=true        # 设置由代理接受并处理信号，但是SIGCHLD、SIGSTOP和SIGKILL不能被代理
+```
+
+## 服务管理
+
+```bash
+service docker start       # 启动 docker 服务，守护进程
+service docker restart     #重新启动docker服务 守护进程
+service docker stop        # 停止 docker 服务
+service docker status      # 查看 docker 服务状态
+chkconfig docker on        # 设置为开机启动
+```
+
+## 镜像管理
+
+镜像可以看做我们平时装系统的镜像，里面就是一个运行环境。
+
+```bash
+docker pull centos:latest  # 从docker.io中下载centos镜像到本地
+docker images [-a][-q]              # 查看已下载的镜像  q只显示image id a=all
+docker rm image_id         # 删除镜像，指定镜像id
+docker inspect 镜像名/id  查看镜像详细信息 
+# 删除所有镜像
+# none 默认为 docker.io
+docker rmi image/imageid/image:tag 
+docker rmi image:tag image:tag image:tag删除多个image
+docker rmi $(docker images ubuntu -q) 删除所有ubuntu的镜像
+```
+## 查找镜像
+1 通过 docker hub  https://registry.hub.docker.com   name:hvag pwd a475886877
+2 docker search 镜像 最多返回25个镜像  -s or --stars表示 限定至少多少个星级
+## 下载镜像
+docker pull [option] NAME [:TAG]
+## 推送镜像到docker hub上
+docker push [option] NAME [:TAG]
+
+
+
+## 容器管理
+
+容器就像一个类的实例
+
+```bash
+# 列出本机正在运行的容器
+docker container ls
+# 列出本机所有容器，包括终止运行的容器
+docker container ls --all
+# 启动容器
+docker run -i -t centos /bin/bash   # 启动一个容器
+docker run -i -t centos /bin/sh   # 启动一个容器
+docker run -p 80 --name web -i -t -d ubuntu /bin/bash 启动ubuntu容器 对外接口80 
+docker run centos echo "hello world"  # 在docker容器中运行hello world!
+docker run centos yum install -y wget # 在docker容器中，安装wget软件
+# 查看容器
+docker ps                           # 列出包括未运行的容器
+docker ps -a                        # 查看所有容器(包括正在运行和已停止的)
+#docker ps [-a][-l]  -a表示所有  -l表示最新
+
+docker logs [containerID/Names]  # 查看日志
+docker logs [-f][-t] [--tail] 容器名 跟踪运行的容器 tail返回尾部多少数量日志 -f一直更新日志 需要ctr+c停止 -t表示显示带上时间戳
+
+docker inspect [容器id/容器名] 查看容器详细信息
+
+docker start [containerID/Names] # 启动容器
+docker stop [containerID/Names]  # 停止容器
+docker rm [-f] [containerID/Names]    # 删除容器 -f强制删除
+
+docker exec -it [containerID/Names] /bin/bash  # 进入容器
+docker exec -it [containerID/Names] /sh  # 进入容器
+docker attach  容器id 进入已经运行的容器  在输入exit 退出容器 并停止容器
+
+# 从正在运行的 Docker 容器里面，将文件拷贝到本机，注意后面有个【点】拷贝到当前目录
+docker container cp [containID]:[/path/to/file] .
+
+docker commit 8bd centos  # 保存对容器的修改
+docker commit -m "n changed" my-nginx my-nginx-image # 使用已经存在的容器创建一个镜像
+docker inspect -f {{.State.Pid}} 44fc0f0582d9 # 获取id为 44fc0f0582d9 的PID进程编号
+# 下载指定版本容器镜像
+docker pull gitlab/gitlab-ce:11.2.3-ce.0
+```
+
+
+## 文件拷贝
+
+从主机复制到容器 `sudo docker cp host_path containerID:container_path` 
+示例 docker cp /www/runoob 96f7f14e99ab:/www/  将主机/www/runoob目录拷贝到容器96f7f14e99ab的/www目录下
+从容器复制到主机 `sudo docker cp containerID:container_path host_path`
+docker cp命令类似于UNIX中的cp -a命令，递归复制目录下的所有子目录和文件
+-表示通过标准输入/输出设备以流的方式读取或写入tar文件
+本地文件系统中的路径可以是绝对路径，也可以是相对路径，相对于当前命令执行的路径
+容器中的路径都是相对容器的/根路径
+被操作的容器可以是在运行状态，也可以是停止状态
+不能复制/proc, /sys, /dev, tmpfs和容器中mount的路径下的文件
+
+## 数据卷管理
+docker volume ls 查看所有的数据卷
+docker inspect test_db  详细查看 test_db数据卷信息 注意 Moutpoint 这是宿主机上数据卷的具体存放位置
+可以看到数据卷test_db实际上存储在了本机的/var/lib/docker/volumes/test_db/_data上了。
+skip-grant-tables
+解决方法一: 删除数据卷
+
+第一步:删除容器docker-compose rm -v
+第二步:删除数据卷docker volume rm test_db
+第三步:重新启动容器docker-compose up
+
+数据卷 保存数据到宿主机上 可以在容器之间共享和重用 可以备份与还原 不会随着容器删除而删除 一直存在
+docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名/id
+docker run -it -v /宿主机绝对路径目录:/容器内目录:ro 镜像名/id  ro表示只读 意思数据卷数据只能读取 不能写入
+
+docker run -it -v ~/datavolume:/data ubuntu /bin/bash   datavolume保存在本地中 -v 指定使用数据卷
+docker run -it -v $(pwd):/data ubuntu /bin/bash 
+touch /data/c1 在容器中 data目录下建立c1文件
+echo "i'm hvag" > /data/c1 输入 信息到 c1文件中
+exit 退出bash
+宿主机 cd datavolume/  就可以看到c1 文件夹  
+vim c1 就可以看到im hvag了
+
+容器之间共享数据
+docker run --volumns-from [container name] 使用已经存在数据卷的容器的数据卷 就是共享数据
+docker run -it --name con2 --volumns-from con1 ubuntu /bin/bash
+
+数据卷备份与还原
+备份
+docker run --volumns-from [container name] -v $(pwd):/backup ubuntu
+docker run  --volumns-from con1 -v ~/backup:/backup --name con2 ubuntu tar cvf /backup/con2.tar /datavolumn
+
+docker save -o mynginx.tar 镜像名字
+还原
+docker load -i mynginx.tar
+
+## 端口映射
+
+docker run -d --name nginx_1 -P nginx:latest 
+通过docker ps可以看到nginx_1容器的80端口被映射到本机的32768端口上。访问宿主主机的32768端口就可以访问容器内的应用程序提供的Web界面
+
+-p(小写p)可以指定要映射的端口，并且在一个指定的端口上只可以绑定一个容器。支持的格式有：IP:HostPort:ContainerPort | IP::ContainerPort | HostPort:ContainerPort 。
+docker run -itd -p 5000:5000 --name nginx_2 nginx:latest 
+可以使用IP:HostPort:ContainerPort格式指定映射使用一个特定地址：
+docker run -itd -p 10.0.0.31:89:8081 --name nginx_4 nginx:latest 
+使用IP::ContainerPort格式绑定本机的任意端口到容器的指定端口：
+docker run -itd -p 10.0.0.31::8082 --name nginx_5 nginx:latest 
+映射多个端口
+docker run -itd -p 400-402:400-402 --name nginx_5 nginx:latest 
+docker port nginx_1
+
+
+## 容器使用状况监控
+$ docker stats
+默认情况下，stats 命令会每隔 1 秒钟刷新一次输出的内容直到你按下 ctrl + c。下面是输出的主要内容：
+[CONTAINER]：以短格式显示容器的 ID。
+[CPU %]：CPU 的使用情况。
+[MEM USAGE / LIMIT]：当前使用的内存和最大可以使用的内存。
+[MEM %]：以百分比的形式显示内存使用情况。
+[NET I/O]：网络 I/O 数据。
+[BLOCK I/O]：磁盘 I/O 数据。
+[PIDS]：PID 号。
+
+ --no-stream 选项只输出当前的状态：
+$ docker stats --no-stream
+$ docker stats --no-stream registry 1493 查看指定的容器状态 1493表示容器id
+$ docker stats $(docker ps --format={{.Names}})
+$ docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+
+## network 代替 link  在启动db容器的时候并没有使用-p或者-P参数，从而避免了暴露数据库服务端口到外部网络上。
+Usage:  docker network COMMAND
+
+Manage networks
+
+Commands:
+  connect     将一个容器连接到某一个网络
+  create      创建一个网络
+  disconnect  从某个网络中断开某一个容器的连接
+  inspect     查看所有网络的详细信息
+  ls          List networks
+  prune       Remove all unused networks
+  rm          Remove one or more networks
+
+
+1.创建网络
+docker network create wp-net
+docker network ls 查看虚拟网卡的信息
+docker run -d -p 3316:3306 --name wp-mysql --network wp-net --network-alias mysql -e MYSQL_ROOT_PASSWORD=123 mysql
+
+说明：
+
+docker run：启动容器
+
+-d：后台运行
+
+-p 3316:3306：将容器的3306端口映射到宿主机的3306端口上
+
+--name wp-mysql：指定容器的名称为wp-mysql
+
+--network wp-net：将容器加入到wp-net网络中
+
+--network-alias mysql：指定容器在wp-net网络中的别名是mysql
+
+-e MYSQL_ROOT_PASSWORD=123：初始化数据库root用户的密码为123
+
+
+docker run --name py1 --network wp-net -d python
+说明：
+docker exec -it py1 /bin/bash
+
+
+验证在py1容器中是否能与数据库通信
+C:\Users\zsl-pc>docker exec -it wp-web /bin/bash
+apt-get update
+apt-get install -y iputils-ping
+root@202fdad27426:ping -w 2 mysql
+PING mysql (172.19.0.2): 56 data bytes
+64 bytes from 172.19.0.2: icmp_seq=0 ttl=64 time=0.049 ms
+64 bytes from 172.19.0.2: icmp_seq=1 ttl=64 time=0.155 ms
+--- mysql ping statistics ---
+3 packets transmitted, 2 packets received, 33% packet loss
+round-trip min/avg/max/stddev = 0.049/0.102/0.155/0.053 msp
+或者 进入python 环境  
+import pymysQL r = pymysQl.connect host = wp-mysql 端口号用别名
+说明：说明能够在wp-web容器中使用mysql数据库。
+
+
+//查看 wp-net 网络里面的容器
+docker inspect wp-net
+
+//手动将某个容器加入网桥
+docker network connect my-bridage test2
+
+容器之间的访问可以使用【服务名:端口】的形式，或者【别名:端口】的形式。
+
+
+### 容器中部署nginx
+
+```bash
+docker run -p 80 --name web -i -t ubuntu /bin/bash 启动ubuntu容器 对外接口80 
+apt-get update 这个命令的作用是：同步 /etc/apt/sources.list 和 /etc/apt/sources.list.d 中列出的源的索引，这样才能获取到最新的软件包。否则下面步骤都失败 
+apt-get install -y nginx
+apt-get install -y vim
+mkdir -p /var/www/html
+cd /var/www/html
+vim index.html 写一个html脚本
+whereis nginx
+ls /etc/nginx/sites-enabled 
+vim /etc/nginx/sites-enabled/default 修改root中的默认的html 为刚才建立的html
+nginx 启动nginx
+ps -ef 查看nginx是否启动
+ctr+p  ctr+q 退出容器 且让容器在后台运行
+docker ps 查看运行中的容器
+docker port web 查看web容器端口映射情况
+docker top web 查看web容器进程情况
+然后在浏览器中输入 http://127.0.0.1:32768 查看nginx服务  这个端口32768 是docker port 里面查找看到的
+docker inspect web 查找容器的ip地址 和映射的端口
+可以用容器的ip地址访问 
+
+docker stop web 停止容器
+docker start -i  web 启动容器 通过ps -ef查看  nginx 并没有启动
+ctr+p  ctr+q 退出容器 且让容器在后台运行
+docker exec web nginx 然后启动nginx
+
+
+
+
+docker run -itd --name my-nginx2 nginx # 通过nginx镜像，【创建】容器名为 my-nginx2 的容器
+docker start my-nginx --restart=always    # 【启动策略】一个已经存在的容器启动添加策略
+                               # no - 容器不重启
+                               # on-failure - 容器推出状态非0时重启
+                               # always - 始终重启
+docker start my-nginx               # 【启动】一个已经存在的容器
+docker restart my-nginx             # 【重启】容器
+docker stop my-nginx                # 【停止运行】一个容器 需要等待容器运行完毕
+docker kill my-nginx                # 【杀死】一个运行中的容器
+docker rename my-nginx new-nginx    # 【重命名】容器
+docker rm new-nginx                 # 【删除】容器
+```
+
+### 镜像中安装软件
+
+通常情况下，使用docker官方镜像，如 mysql镜像，默认情况下镜像中啥软件也没有，通过下面命令安装你所需要的软件：
+
+```bash
+# 第一次需要运行这个命令，确保源的索引是最新的
+# 同步 /etc/apt/sources.list 和 /etc/apt/sources.list.d 中列出的源的索引
+apt-get update
+# 做过上面更新同步之后，可以运行下面的命令了
+apt-get install vim
+```
+
+如果你安装了CentOS或者Ubuntu系统可以进入系统安装相关软件
+
+```bash
+# 进入到centos7镜像系统
+docker run -i -t centos:7 /bin/bash
+yum update
+yum install vim
+```
+
+### 通过容器创建镜像
+
+我们可以通过以下两种方式对镜像进行更改。
+
+1. 从已经创建的容器中更新镜像，并且提交这个镜像
+2. 使用 Dockerfile 指令来创建一个新的镜像
+
+下面通过已存在的容器创建一个新的镜像。
+docker commit [options] container [repository[:tag]] -a or --author表示作者 -m表示提交信息
+```bash
+docker commit -m="First Docker" -a="hvag" a6b0a6cfdacf hvag/nginx:v1.2.1
+```
+
+上面命令参数说明：
+
+- `-m` 提交的描述信息
+- `-a` 指定镜像作者
+- `a6b0a6cfdacf` 记住这个是容器id，不是镜像id
+- `hvag/nginx:v1.2.1` 创建的目标镜像名
+
+
+
+
+
+
+
