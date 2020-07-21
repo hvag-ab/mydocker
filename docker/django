@@ -112,10 +112,10 @@ def zipDir(dirpath, outFullName):
     zip.close()
 
 
-hostname = '121.36.98.111'
-username = 'develop'
-password = 'YTI3NjdjMDVkNjBjYz'
-port = 20022
+hostname = ''
+username = ''
+password = ''
+port = 
 
 def put_ag(localpath,tmppath):
     # paramiko.util.log_to_file('syslogin.log')
@@ -143,6 +143,17 @@ if __name__ == '__main__':
     os.remove(outFullName)
 
 #start.sh
+rm -rf sqltest/
+mkdir sqltest
+unzip sqltest.zip -d sqltest
+rm -f sqltest.zip
+conid=$(sudo docker ps -aqf 'name=hvag_python')
+echo $conid
+sudo docker stop ${conid}
+sudo docker rm ${conid}
+cd /data/develop/lihong/sqltest && sudo docker-compose up -d --build
+nginx -s reload
+
 
 ```bash
 $ docker image build -t hvag_python .   注意 . 不能忘记掉 否则构建失败
