@@ -11,29 +11,145 @@ xxx_project:
 　　　　wsgi.py
 　　templates
 　　　　xxx.html
+    Dockerfile
+    entrypoint.sh
+    gunicorn.py
+    manage.py
+    pip.conf
 　　requirements.txt
-　　manage.py
+    ssh.py
+　　start.sh
 　　static
-   media
-　　conf
-　　　　uwsgi.ini
-　　nginx
-　　　　Dockerfile
-　　　　nginx.conf
-　　　　uc_nginx.conf
-　　Dockerfile
-　　docker-compose.yml
-　　docker-entrypoins.sh
 
-web的Dockerfile
-FROM python:3.5
-ENV PYTHONUNBUFFERED 1
-RUN echo python -V
-RUN mkdir /docker_api
-WORKDIR /docker_api
-ADD . /docker_api
-RUN pip install --upgrade pip
-RUN  pip install -i https://pypi.douban.com/simple -r requirements.txt
+
+#Dockerfile内容
+FROM python:3.7
+# install pypi packages
+#RUN apk update
+#RUN apk add make automake gcc g++ subversion python3-dev
+COPY pip.conf /root/.pip/pip.conf
+COPY requirements.txt /requirements.txt
+#RUN pip install --upgrade pip \
+RUN pip install -r requirements.txt
+
+WORKDIR /app
+COPY . /app
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+# entrypoint.sh
+#!/usr/bin/env bash
+#gunicorn --reload config.wsgi -c ./gunicorn.py -b 0.0.0.0:8888 --log-level=debug
+#python manage.py collectstatic --no-input
+#python manage.py migrate
+gunicorn -c ./gunicorn.py sqltest.wsgi:application
+
+#gunicorn.py
+# 并行工作进程数
+workers = 4
+# 指定每个工作者的线程数
+threads = 2
+# 监听内网端口5000
+bind = '0.0.0.0:8888'
+# 设置守护进程,将进程交给supervisor管理
+daemon = 'false'
+# 工作模式协程
+worker_class = 'gevent'
+# 设置最大并发量
+worker_connections = 2000
+# 设置进程文件目录
+pidfile = 'gunicorn.pid'
+# 设置访问日志和错误信息日志路径
+accesslog = 'gunicorn_acess.log'
+errorlog = 'gunicorn_error.log'
+# 设置日志记录水平
+loglevel = 'debug'
+
+timeout = 30      #超时
+
+#pip.conf
+[global]
+index-url = http://mirrors.aliyun.com/pypi/simple/
+[install]
+trusted-host=mirrors.aliyun.com
+
+#requirements.txt
+Django==2.1
+pandas
+openpyxl
+djangorestframework==3.9.2
+coreapi==2.3.3
+django-cors-headers
+gunicorn==19.9.0
+pymysql
+gevent
+django-filter
+
+#ssh.py
+"""
+author:hvag
+"""
+import zipfile
+import paramiko
+import os
+
+def zipDir(dirpath, outFullName):
+    """
+    压缩指定文件夹
+    :param dirpath: 目标文件夹路径
+    :param outFullName: 压缩文件保存路径+xxxx.zip
+    :return: 无
+    """
+    zip = zipfile.ZipFile(outFullName, "w", zipfile.ZIP_DEFLATED)
+    for path, dirnames, filenames in os.walk(dirpath):
+        # 去掉目标根路径，只对目标文件夹下边的文件及文件夹进行压缩
+        fpath = path.replace(dirpath, '')
+
+        for filename in filenames:
+            zip.write(os.path.join(path, filename), os.path.join(fpath, filename))
+    zip.close()
+
+
+hostname = '121.36.98.111'
+username = 'develop'
+password = 'YTI3NjdjMDVkNjBjYz'
+port = 20022
+
+def put_ag(localpath,tmppath):
+    # paramiko.util.log_to_file('syslogin.log')
+    t = paramiko.Transport((hostname, port))
+    t.connect(username=username, password=password)
+    sftp = paramiko.SFTPClient.from_transport(t)
+    sftp.put(localpath, tmppath)  # 上传本地源文件到堡垒机临时路径
+    sftp.close()
+
+
+if __name__ == '__main__':
+    dirpath = r'E:\sqltest'
+    outFullName = r'E:\sqltest.zip'
+    zipDir(dirpath, outFullName)
+
+    tmpdir = "/data/develop/lihong"
+    localdir = r"E:"
+    filename = 'sqltest.zip'
+
+    localpath = localdir + '/' + filename
+    tmppath = tmpdir + "/" + filename
+
+    put_ag(localpath,tmppath)
+
+    os.remove(outFullName)
+
+#start.sh
+
+```bash
+$ docker image build -t hvag_python .   注意 . 不能忘记掉 否则构建失败
+$ docker run -it -p 20001:8888 -d hvag_python
+
+
+
 
 nginx的Dockerfile
 
@@ -42,14 +158,6 @@ COPY uc_nginx.conf /etc/nginx/sites-available/
 RUN mkdir -p /etc/nginx/sites-enabled/\
     && ln -s /etc/nginx/sites-available/uc_nginx.conf /etc/nginx/sites-enabled/
 CMD ["nginx", "-g", "daemon off;"]
-
-requirements.txt
-pymysql
-django
-uwsgi
-mysqlclient
-djangorestframework
-django-filter
 
 docker-compose.yml配置文件
 version: '3'
