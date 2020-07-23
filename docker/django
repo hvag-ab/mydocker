@@ -159,6 +159,10 @@ nginx -s reload
 $ docker image build -t hvag_python .   注意 . 不能忘记掉 否则构建失败
 $ docker run -it -p 20001:8888 -d hvag_python
 
+如果更新了数据挂卷对应的目录里面的django文件 比如更新django
+那么 就需要 docker rm -f 容器id
+然后  docker run -itd -p 20001:8888 -v /data:/app hvag_python
+注意要重新建立数据卷挂靠
 
 
 
