@@ -143,16 +143,22 @@ if __name__ == '__main__':
     os.remove(outFullName)
 
 #start.sh
-rm -rf sqltest/
-mkdir sqltest
-unzip sqltest.zip -d sqltest
+#!/bin/bash
+
+conid=$(sudo docker ps -aqf 'name=hvag_python')#获取容器id
+imageid=$(sudo docker images -qa 'hvag_python')#获取镜像id
+if [ $imageid ]
+then echo ${imageid}
+else cd /data/develop/lihong/sqlt && sudo docker image build -t hvag_python .
+fi
+sudo docker rm -f ${conid}
+rm -rf sqlt
+mkdir sqlt
+unzip sqltest.zip -d sqlt
 rm -f sqltest.zip
-conid=$(sudo docker ps -aqf 'name=hvag_python')
-echo $conid
-sudo docker stop ${conid}
-sudo docker rm ${conid}
-cd /data/develop/lihong/sqltest && sudo docker-compose up -d --build
-nginx -s reload
+
+sudo docker run -itd -p 20001:8888 --name hvag_python -v /data/develop/lihong/sqlt:/app hvag_python
+#nginx -s reload
 
 
 ```bash
