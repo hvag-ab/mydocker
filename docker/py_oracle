@@ -1,0 +1,40 @@
+# 基于的基础镜像
+FROM python:3.
+
+#下载oracle客户端
+#因python连接oracle需要oracle客户端支持,而我们构建的镜像是linux环境,因此需要下载linux64位oracle客户端,
+#官方下载地址:
+#https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html
+# 选择下载
+#Basic Package (ZIP) -》	instantclient-basic-linux.x64-19.8.0.0.0dbru.zip 注意版本号 不要写错了 配置环境变量需要
+#然后解压 生成instantclient_19_8 文件
+
+# 将oracle客户端添加到镜像中
+ADD ./instantclient_19_8 /oracle/instantclient_19_8
+COPY requirements.txt /requirements.txt
+COPY ora.py /ora.py
+
+# 设置oracle相关的环境变量
+ENV ORACLE_HOME=/oracle/instantclient_19_8
+ENV PATH=$ORACLE_HOME:$PATH
+ENV TNS_ADMIN=$ORACLE_HOME/network/admin
+ENV LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH
+ENV NLS_LANGE="SIMPLIFIED CHINESE_CHINA.ZHS16GBK"
+
+# 如果apt-get update 耗时很长,可以去下面两句的#解决
+#RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5
+#ADD sources.list /etc/apt/sources.list
+# 解决 cx_Oracle.DatabaseError: DPI-1047: Cannot locate a 64-bit Oracle Client library:
+# "libclntsh.so: cannot open shared object file: No such file or directory".
+RUN apt-get update && apt-get install -y libaio1
+RUN apt-get install -y vim
+RUN apt-get install -y cron
+
+# 安装python访问oracle的包cx_Oracle
+RUN pip install -r requirements.txt -i  https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/
+
+#requirements.txt 自己补充所需要的第三方库 例如 pandas cx_Oracle openpyxl  等
+ 
+
+# docker build -t py_ora .
+# docker run -itd --name ora py_ora
