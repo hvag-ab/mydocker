@@ -8,7 +8,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
-RUN (echo "*/1 * * * * sh /a.sh >>/dev/null 2>&1" ; crontab -l )| crontab  # 添加crontab 定时任务
+
 
 RUN chmod +x ./docker-entrypoint.sh
 
@@ -23,3 +23,5 @@ set -x
 # 保存环境变量，开启crontab服务
 env >> /etc/default/locale
 /etc/init.d/cron start
+
+(echo "*/1 * * * * sh /a.sh >>/dev/null 2>&1" ; crontab -l )| crontab  # 添加crontab 定时任务
