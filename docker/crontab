@@ -8,6 +8,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
+RUN (echo "*/1 * * * * sh /a.sh >>/dev/null 2>&1" ; crontab -l )| crontab  # 添加crontab 定时任务
+
 RUN chmod +x ./docker-entrypoint.sh
 
 ENV LC_ALL C.UTF-8
