@@ -1,0 +1,138 @@
+version: "3"
+services:
+#  主库
+  mysql-master:
+    image: mysql:5.7.22
+    restart: always
+    hostname: mysql-master
+    container_name: mysql_master
+    ports:
+      - 3316:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    volumes:
+      - ./master/mysql/data:/var/lib/mysql
+      - ./master/mysql/log:/var/log/mysql
+    command:
+      --server_id=100
+      --log-bin=mysql-master-bin
+      --sync_binlog=1
+      --binlog-ignore-db=mysql
+      --binlog_format=mixed
+      --expire_logs_days=7
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+#    links:
+#      -  mysql-slave-read
+#      -  mysql-slave-back
+    networks:
+      - hvag
+   #从库
+  mysql-slave-read:
+    image: mysql:5.7.22
+    restart: always
+    hostname: mysql-slave-read
+    container_name: mysql-slave-read
+    ports:
+      - 3317:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Shanghai
+    volumes:
+      - ./slave/mysql/data:/var/lib/mysql
+      - ./slave/mysql/log:/var/log/mysql
+    command:
+      --server_id=200
+      --read_only=1
+      --binlog-ignore-db=mysql
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    networks:
+      - hvag
+
+  #备份库
+#  mysql-slave-back:
+#    image: mysql:5.7.22
+#    restart: always
+#    hostname: mysql-slave-back
+#    container_name: mysql-slave-back
+#    ports:
+#      - 3318:3306
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      TZ: Asia/Shanghai
+#    volumes:
+#      - ./slave-back/mysql/data:/var/lib/mysql
+#      - ./slave-back/mysql/log:/var/log/mysql
+#    command:
+#      --server_id=300
+#      --log-bin=slave-back-bin
+#      --default-authentication-plugin=mysql_native_password
+#      --character-set-server=utf8mb4
+#      --collation-server=utf8mb4_general_ci
+#      --explicit_defaults_for_timestamp=true
+#      --lower_case_table_names=1
+#
+#    networks:
+#      - hvag
+
+networks:
+  hvag:
+
+
+#操作master表
+# 1 docker exec -it mysql_master bash 进入master
+# 2 mysql -u root -p
+# 3 root
+#  # 1.创建主从复制的账号
+# 4 grant replication slave on *.* to 'slave'@'%' identified by '123456';
+#  # 2.主表锁定
+# 5 FLUSH TABLES WITH  READ LOCK
+#  # 3.先查主表状态
+# 6 SHOW MASTER  STATUS \G
+#  *************************** 1. row ***************************
+#    File: mysql-master-bin.000005 // 后续设置slave配置的时候 master_log_file 参数
+#    Position: 438 // 后续设置slave配置的时候 master_log_pos 参数
+#    Binlog_Do_DB:
+#    Binlog_Ignore_DB: mysql
+#    Executed_Gtid_Set:
+#  # 12.解锁
+# 7 UNLOCK TABLES
+#
+#操作slave表
+# 1 docker exec -it mysql_master bash 进入master
+# 2 mysql -u root -p
+# 3 root
+#
+#  # 4.停止主从复制
+#  STOP SLAVE;
+#  # 5.配置主库信息  master_host='mysql_master',//主库的ip 因为设置了net work同一网络 直接用容器名字
+#  # master_user='root',//主库的账号
+#  # master_password='root',//主库的密码
+#  # master_port=3306,//主库的端口
+#  # master_log_file='mysql-master-bin.000005',//主库当前状态下的File名
+#  # master_log_pos=430;//主库当前状态下的position
+#   change master to master_host='mysql_master',master_user='root',master_password='root',
+#   master_log_file='mysql-master-bin.000005',master_log_pos=438,master_port=3306;
+#  # 6.开启主从复制
+#  START SLAVE
+#  # 7.查看状态
+#  SHOW SLAVE STATUS \G
+#
+#  显示 查看 slave_io_runing , slave_sql_running 都是 Yes 就表示设置成功了
+
+
+#测试 主机创建数据库和表
+#
+# create database gavh
+# create table hv (id int,name varchar(32));
+#
+#看到slave 从机 也有 就表示同步成功
+
