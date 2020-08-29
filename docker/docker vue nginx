@@ -1,0 +1,88 @@
+project
+ nginx
+   nginx.conf
+   
+ vuebase
+   ....
+   dist
+   ...
+   
+  docker-compose.yaml
+  
+1.cd vuebase
+2.pm install --registry=https://registry.npm.taobao.org
+3.npm run build
+
+nginx.conf 内容
+
+ #user  nobody;
+worker_processes  1;
+events {
+  worker_connections  1024;
+}
+
+http {
+  include mime.types;
+  default_type  application/octet-stream;
+
+  log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+  '$status $body_bytes_sent "$http_referer" '
+  '"$http_user_agent" "$http_x_forwarded_for"';
+
+  #access_log  logs/access.log  main;
+
+  sendfile        on;
+  #tcp_nopush     on;
+
+  #keepalive_timeout  0;
+  keepalive_timeout  65;
+
+  #gzip  on;
+
+  #upstream test-vue {
+  #  server test-vue:8080; # 该处为docker-compose 容器的名称
+  #}
+
+  #api服务配置
+  server {
+        listen       8089;#默认端口是80，如果端口没被占用可以不用修改
+        #server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+        root        /var/www/html/static;#vue项目的打包后的dist dist已经挂载到这个目录下
+
+        location / {
+            try_files $uri $uri/ @router;#需要指向下面的@router否则会出现vue的路由在nginx中刷新出现404
+            index  index.html index.htm;
+        }
+        #对应上面的@router，主要原因是路由的路径资源并不是一个真实的路径，所以无法找到具体的文件
+        #因此需要rewrite到index.html中，然后交给路由在处理请求资源
+        location @router {
+            rewrite ^.*$ /index.html last;
+        }
+        #.......其他部分省略
+  }
+
+}
+
+docker-compose.yaml 内容
+
+version: '3'
+services:
+  nginx:
+    restart: always
+    container_name: nginx
+    image: nginx:1.17
+    networks:
+      - hvag
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./vuebase/dist:/var/www/html/static
+    command: [nginx, '-g', 'daemon off;']
+
+networks:
+  hvag:
