@@ -1,0 +1,280 @@
+1.集群规划
+
+zk1	192.168.88.3:2181
+zk2	192.168.88.3:2182
+zk3	192.168.88.3:2183
+kafka1	192.168.88.3:9092
+kafka2	192.168.88.3:9093
+kafka3	192.168.88.3:9094
+2.创建目录
+
+mkdir -p /home/wangyan/zookeeper/zk1/conf &&
+
+mkdir -p /home/wangyan/zookeeper/zk1/data &&
+
+mkdir -p /home/wangyan/zookeeper/zk1/log &&
+
+mkdir -p /home/wangyan/zookeeper/zk2/conf &&
+
+mkdir -p /home/wangyan/zookeeper/zk2/data &&
+
+mkdir -p /home/wangyan/zookeeper/zk2/log &&
+
+mkdir -p /home/wangyan/zookeeper/zk3/conf &&
+
+mkdir -p /home/wangyan/zookeeper/zk3/data &&
+
+mkdir -p /home/wangyan/zookeeper/zk3/log &&
+
+mkdir -p /home/wangyan/kafka/kafka1/conf &&
+
+mkdir -p /home/wangyan/kafka/kafka1/log &&
+
+mkdir -p /home/wangyan/kafka/kafka2/conf &&
+
+mkdir -p /home/wangyan/kafka/kafka2/log &&
+
+mkdir -p /home/wangyan/kafka/kafka3/conf &&
+
+mkdir -p /home/wangyan/kafka/kafka3/log;
+
+配置文件:
+
+zk1 zoo.cfg
+
+#心跳时间 单位毫秒
+tickTime=2000
+#leader和follower初始连接能容忍的最大心跳数
+initLimit=10
+#leader和follower请求应答能容忍的最大心跳数
+syncLimit=5
+#zookeeper数据目录
+dataDir=/data
+#zookeeper日志目录
+dataLogDir=/datalog
+#客户端连接端口
+clientPort=2181
+#需要保留的文件个数
+autopurge.snapRetainCount=3
+#定时清理时间间隔 单位小时 设为0表示不清理
+autopure.purgeInterval=1
+#zookeeper集群信息 服务器地址:LF通信端口:选举端口
+server.1=zk1:2888:3888
+server.2=zk2:2888:3888
+server.3=zk3:2888:3888
+zk2 zoo.cfg
+
+#心跳时间 单位毫秒
+tickTime=2000
+#leader和follower初始连接能容忍的最大心跳数
+initLimit=10
+#leader和follower请求应答能容忍的最大心跳数
+syncLimit=5
+#zookeeper数据目录
+dataDir=/data
+#zookeeper日志目录
+dataLogDir=/datalog
+#客户端连接端口
+clientPort=2181
+#需要保留的文件个数
+autopurge.snapRetainCount=3
+#定时清理时间间隔 单位小时 设为0表示不清理
+autopure.purgeInterval=1
+#zookeeper集群信息 服务器地址:LF通信端口:选举端口
+server.1=zk1:2888:3888
+server.2=zk2:2888:3888
+server.3=zk3:2888:3888
+zk3 zoo.cfg
+
+#心跳时间 单位毫秒
+tickTime=2000
+#leader和follower初始连接能容忍的最大心跳数
+initLimit=10
+#leader和follower请求应答能容忍的最大心跳数
+syncLimit=5
+#zookeeper数据目录
+dataDir=/data
+#zookeeper日志目录
+dataLogDir=/datalog
+#客户端连接端口
+clientPort=2181
+#需要保留的文件个数
+autopurge.snapRetainCount=3
+#定时清理时间间隔 单位小时 设为0表示不清理
+autopure.purgeInterval=1
+#zookeeper集群信息 服务器地址:LF通信端口:选举端口
+server.1=zk1:2888:3888
+server.2=zk2:2888:3888
+server.3=zk3:2888:3888
+ 
+
+3.创建网络
+
+docker network create --driver bridge --subnet 172.16.0.0/25 --gateway 172.16.0.1 zookeeper_kafka
+4.创建docker.compose.yml
+
+version: '3'
+ 
+services:
+ 
+  zk1:
+    image: wurstmeister/zookeeper
+    restart: always
+    container_name: zk1
+    hostname: zk1
+    ports:
+    - "2181:2181"
+    volumes:
+    - /home/wangyan/zookeeper/zk1/conf/zoo.cfg:/opt/zookeeper-3.4.13/conf/zoo.cfg
+    - /home/wangyan/zookeeper/zk1/data:/data
+    - /home/wangyan/zookeeper/zk1/log:/datalog
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+    networks:
+      default:
+        ipv4_address: 172.16.0.2
+ 
+  zk2:
+    image: wurstmeister/zookeeper
+    restart: always
+    container_name: zk2
+    hostname: zk2
+    ports:
+    - "2182:2181"
+    volumes:
+    - /home/wangyan/zookeeper/zk2/conf/zoo.cfg:/opt/zookeeper-3.4.13/conf/zoo.cfg
+    - /home/wangyan/zookeeper/zk2/data:/data
+    - /home/wangyan/zookeeper/zk2/log:/datalog
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+    networks:
+      default:
+        ipv4_address: 172.16.0.3
+ 
+  zk3:
+    image: wurstmeister/zookeeper
+    restart: always
+    container_name: zk3
+    hostname: zk3
+    ports:
+    - "2183:2181"
+    volumes:
+    - /home/wangyan/zookeeper/zk3/conf/zoo.cfg:/opt/zookeeper-3.4.13/conf/zoo.cfg
+    - /home/wangyan/zookeeper/zk3/data:/data
+    - /home/wangyan/zookeeper/zk3/log:/datalog
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+    networks:
+      default:
+        ipv4_address: 172.16.0.4
+ 
+  kafka1:
+    image: wurstmeister/kafka
+    restart: always
+    container_name: kafka1
+    hostname: kafka1
+    ports:
+    - 9092:9092
+    environment:
+      KAFKA_HOST_NAME: kafka1
+      KAFKA_ADVERTISED_HOST_NAME: kafka1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.88.5:9092
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
+      KAFKA_BROKER_ID: 0
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    volumes:
+    - /etc/localtime:/etc/localtime
+    - /home/wangyan/kafka/kafka1/log:/kafka
+    links:
+    - zk1
+    - zk2
+    - zk3
+    networks:
+      default:
+        ipv4_address: 172.16.0.5
+ 
+  kafka2:
+    image: wurstmeister/kafka
+    restart: always
+    container_name: kafka2
+    hostname: kafka2
+    ports:
+    - 9093:9092
+    environment:
+      KAFKA_HOST_NAME: kafka2
+      KAFKA_ADVERTISED_HOST_NAME: kafka2
+      KAFKA_ADVERTISED_PORT: 9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.88.5:9093
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    volumes:
+    - /etc/localtime:/etc/localtime
+    - "/home/wangyan/kafka/kafka2/log:/kafka"
+    links:
+    - zk1
+    - zk2
+    - zk3
+    networks:
+      default:
+        ipv4_address: 172.16.0.6
+ 
+  kafka3:
+    image: wurstmeister/kafka
+    restart: always
+    container_name: kafka3
+    hostname: kafka3
+    ports:
+    - 9094:9092
+    environment:
+      KAFKA_HOST_NAME: kafka3
+      KAFKA_ADVERTISED_HOST_NAME: kafka3
+      KAFKA_ADVERTISED_PORT: 9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.88.5:9094
+      KAFKA_ZOOKEEPER_CONNECT: zk1:2181,zk2:2181,zk3:2181
+      KAFKA_BROKER_ID: 2
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    volumes:
+    - /etc/localtime:/etc/localtime
+    - "/home/wangyan/kafka/kafka3/log:/kafka"
+    links:
+    - zk1
+    - zk2
+    - zk3
+    networks:
+      default:
+        ipv4_address: 172.16.0.7
+ 
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    restart: always
+    container_name: kafka-manager
+    hostname: kafka-manager
+    ports:
+    - 9000:9000
+    links:
+    - kafka1
+    - kafka2
+    - kafka3
+    - zk1
+    - zk2
+    - zk3
+    environment:
+      ZK_HOSTS: 192.168.88.5
+    networks:
+      default:
+        ipv4_address: 172.16.0.8
+ 
+networks:
+  default:
+    external:
+      name: zookeeper_kafka
+ 
+
+5.使用docker-compose构建镜像启动容器集群
+
+docker-compose -f docker-compose.yml up -d
