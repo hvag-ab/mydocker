@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+
+  broker_0:
+    image: wurstmeister/kafka:2.11-2.0.0
+    networks:
+       - cluster_net 
+       - zk_cluster_net
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://宿主机IP:9092
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181/kafka
+
+  broker_1:
+    image: wurstmeister/kafka:2.11-2.0.0
+    networks:
+        - cluster_net 
+        - zk_cluster_net
+    ports:
+      - 9093:9093
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://宿主机IP:9093
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181/kafka
+
+  broker_2:
+    image: wurstmeister/kafka:2.11-2.0.0
+    networks:
+        - cluster_net 
+        - zk_cluster_net
+    ports:
+      - 9094:9094
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://宿主机IP:9094
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181/kafka
+
+networks:
+  cluster_net:
+  zk_cluster_net:
+    external:
+      name: zookeeper_cluster_net
+      
+ 
+替换KAFKA_ADVERTISED_LISTENERS中的IP为宿主机IP.
+查看宿主机IP
+
+> hostname -i
+192.168.138.110
+启动zookeeper集群
+https://github.com/xjzrc/docker-compose-file/tree/master/zookeeper
+
+启动kafka集群：docker-compose up -d
+
+进入其中一个broker容器：docker exec -it kafka_broker_0_1 bash
+
+进入kafka安装目录：cd /opt/kafka_2.11-2.0.0
+
+创建kafka主题
+
+Let's create a topic named "topic1" with a replication factor of three:
+
+> bin/kafka-topics.sh --create --zookeeper zoo1:2181,zoo2:2181,zoo3:2181/kafka --replication-factor 3 --partitions 1 --topic topic1
+We can now see that topic if we run the list topic command:
+
+> bin/kafka-topics.sh --list --zookeeper zoo1:2181,zoo2:2181,zoo3:2181/kafka
+topic1
+Okay but now that we have a cluster how can we know which broker is doing what? To see that run the "describe topics" command:
+
+> bin/kafka-topics.sh --describe --zookeeper zoo1:2181,zoo2:2181,zoo3:2181/kafka --topic topic1
+Topic:topic1   PartitionCount:1    ReplicationFactor:3 Configs:
+    Topic: topic1  Partition: 0    Leader: 1   Replicas: 1,2,0 Isr: 1,2,0
+创建一个生产者发送消息
+Run the producer and then type a few messages into the console to send to the server.
+
+> bin/kafka-console-producer.sh --broker-list localhost:9092 --topic topic1
+This is a message
+This is another message
+创建一个消费者消费消息
+Start a consumer
+
+> bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic topic1 --from-beginning
+This is a message
+This is another message
+查看队列消费进度
+View queue consumption progress
+
+> bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --describe --group consumer-group-id
+TOPIC     PARTITION   CURRENT-OFFSET   LOG-END-OFFSET     LAG   CONSUMER-ID     HOST      CLIENT-ID
+topic1        1          301441          339135          37694      -            -           -
