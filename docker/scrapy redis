@@ -1,0 +1,66 @@
+项目结构
+  scrapy项目
+  Dockerfile
+  docker-compose.yml
+  requirements.txt
+  
+  
+  dockerfile:
+    FROM python:3.5
+    ENV PATH /usr/local/bin:$PATH
+    ADD . /code
+    WORKDIR /code
+    RUN pip install -r requirements.txt
+    COPY spiders.py /usr/local/lib/python3.5/site-packages/scrapy_redis
+    CMD /usr/local/bin/scrapy crawl xxx
+    
+  docker-compose.yml
+  
+    version: '3'
+      services:
+        spider:
+          build: .
+          volumes:
+           - .:/code
+          networks:
+           - hvag
+          depends_on:
+           - redis
+        redis:
+          image: redis
+          ports:
+           - "6379:6379"
+          networks:
+           - hvag
+       networks:
+          - hvag
+          
+   requirements.txt
+    scrapy
+    scrapy_redis
+    redis
+    pymysql
+    
+   settings.py
+     SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+
+# Ensure all spiders share same duplicates filter through redis.
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
+# REDIS_START_URLS_AS_SET = True
+
+REDIS_PARAMS = {'host':'redis','decode_responses':False}
+
+
+开始部署
+启动 container
+
+docker-compose up #从 docker-compose.yml 中创建 `container` 们
+docker-compose scale spider=4 #将 spider 这一个服务扩展到4个，还是同一个 redis
+
+
+在没有设置 start_urls 时，4个 container 中的爬虫都处于饥渴的等待状态
+lpush itjuziCrawler:start_urls http://www.itjuzi.com/company
+
+
+  
