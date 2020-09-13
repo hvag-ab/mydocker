@@ -314,7 +314,7 @@ Commands:
 
 
 1.创建网络
-docker network create wp-net
+docker network create wp-net # docker network create -d bridge wp-net //创建一个网桥
 docker network ls 查看虚拟网卡的信息
 docker run -d -p 3316:3306 --name wp-mysql --network wp-net --network-alias mysql -e MYSQL_ROOT_PASSWORD=123 mysql
 
