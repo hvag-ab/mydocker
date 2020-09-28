@@ -55,6 +55,8 @@ COPY . /usr/share/nginx/html
 
 COPY hom* /mydir/
 
+如果指定了 WORKDIR 例如 WORKDIR /app
+COPY myfile/ . 把当前文件下（也就是Dockerfile所在的文件）的myfile文件 复制到 容器 /app 目录下
  
 4.ADD
 ADD 指令与 COPY 指令非常类似，但它包含更多功能。除了将文件从主机复制到容器映像，ADD 指令还可以使用 URL 规范从远程位置复制文件。还可以解压文件
