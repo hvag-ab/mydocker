@@ -145,7 +145,12 @@ service docker restart     #重新启动docker服务 守护进程
 service docker stop        # 停止 docker 服务
 service docker status      # 查看 docker 服务状态
 chkconfig docker on        # 设置为开机启动
+
+systemctl start docker
+systemctl restart docker
+systemctl stop docker
 ```
+
 
 ## 镜像管理
 
@@ -451,8 +456,55 @@ docker commit -m="First Docker" -a="hvag" a6b0a6cfdacf hvag/nginx:v1.2.1
 - `hvag/nginx:v1.2.1` 创建的目标镜像名
 
 
+#### docker 操作 所有容器
+#停止容器
+
+docker stop $(docker ps -a -q)
+
+#删除容器
+
+docker rm $(docker ps -a -q)
+
+#删除镜像
+
+docker image rm $(docker image ls -a -q)
+
+#删除数据卷：（有时候数据卷不清楚 安装新的容器用同样的数据卷会造成冲突）
+
+#docker volume rm $(docker volume ls -q)
+
+#删除 network：
+
+#docker network rm $(docker network ls -q)
+
+#----------------------------------------------------------------------------
+
+#最直接并全面清理的的就是以下命令
+
+#$docker stop $(docker ps -a -q) && docker system prune --all --force
 
 
+删除所有的容器
 
+docker container prune
+
+删除所有的镜像
+
+docker image prune
+
+删除未被任何容器使用的本地卷。
+docker volume prune [OPTIONS]
+
+通过容器名获取容器id
+docker ps -aqf "name=containername"
+说明：
+> -q为安静.只输出ID
+> -a为所有.即使你的容器没有运行也可以工作
+> -f为filter.
+
+
+-----------------
+本机文件可以同步到容器
+docker cp hello.py 容器id:/home
 
 
