@@ -3,6 +3,10 @@ docker images
 docker run -it python:3.6 /bin/bash bash启动python容器
 python 进入python交互式环境
 
+还可以 开8000端口交互
+docker run -it -v /app:/var/opt -p 8000:8000 -d python:3.6 /bin/bash
+docker exec -it xxx bash 进入python 环境 启动一个8000端口
+
 首先在当前目录下建立 mkdir -p myapp 然后在里面建立helloworld.py 
 docker run  -v $PWD/myapp:/usr/src/myapp  -w /usr/src/myapp python:3.5 python helloworld.py
 命令说明：
