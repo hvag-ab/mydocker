@@ -117,6 +117,11 @@ ENV VERSION=1.0 DEBUG=on \
 
 NAME="Magicodes"
 
+在Dockerfile文件里面增加代理的配置：
+
+ENV http_proxy http://xx.xx.xx.xx:8888
+ENV https_proxy http://xx.xx.xx.xx:8888
+
 
 9.EXPOSE
 EXPOSE用来指定端口，使容器内的应用可以通过端口和外界交互。
