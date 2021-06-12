@@ -67,7 +67,7 @@ apt-get install vim
 
 编辑sshd_config文件
 vim /etc/ssh/sshd_config
-添加 permitrootlogin yes  prl三个字母大写
+添加 permitrootlogin yes 
 
 保存退出  ESC + : + WQ
 
