@@ -1,0 +1,57 @@
+docker search svn
+docker pull docker.io/garethflowers/svn-server
+docker images
+
+运行容器
+
+docker run -v /opt/data/svn/repo:/var/opt/svn --name svn-server -p 3690:3690 --privileged=true -e SVN_REPONAME=repository -d docker.io/garethflowers/svn-server
+-name 重命名
+-e传递key-value形式的环境变量，这里指定仓库名为 repository
+-v /opt/data/svn/repo:/var/opt/svn 将容器/var/opt/svn 目录下的内容，挂载到宿主机/opt/data/svn/repo 下，且删除容器不会删除宿主机内容
+-d 后台运行，守护线程
+--privileged=true 指定容器是否为特权容器，特权容器拥有所有的capabilities
+
+进入容器容器进行配置
+
+##进入容器内部
+docker exec -it svn-server /bin/sh  
+## 创建仓库  创建了一个为django 的仓库 
+svnadmin create /var/opt/svn/django
+##进入仓库配置文件路径
+cd /var/opt/svn/django/conf
+
+vi svnserve.conf 编辑资源库配置
+# 去掉这四个选项#
+anon-access = read
+auth-access = write
+
+password-db = passwd
+
+authz-db = authz
+
+ vi passwd 编辑密码文件，添加用户，保存
+ 例如添加user1 user2 账号 = 右边的表示对应账号的密码
+ user1 = 123
+ user2 = 123
+ 
+ vi authz 编辑权限相关配置
+ [groups] # 表示建立组group1 把刚才的账号放入到这个组中
+ group1 = user1,user2
+ 
+ [django:/] # 在django仓库中添加组 并赋予读写权限
+ @group1 = rw
+ 
+ exit
+docker restart svn-server
+重启svn 客户端
+
+ 
+1.先从svn官网https://osdn.net/projects/tortoisesvn/storage/1.14.1/Application/下载 svn客户端 并安装
+2.在需要关联svn的文件夹中 右键乌龟图标 选择repo-brower url填写 svn://ip/django
+3.右键 svn checkout  checkout directory 填写你所在的文件 例如 F:\vue\vue_pages\ 点击ok
+4.出现svn commit 提交代码到服务器 （不需要上传的 选择乌龟图标-add to ignore list） 例如选择 vue中的 dist 不需要上传
+
+
+
+ 
+
