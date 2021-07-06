@@ -6,11 +6,12 @@
 
 ## Change password
 
-进入本地的pyton 解释器 首先本地的python必须安装了jupyterlab
-
+1 首先本地的python必须安装了jupyterlab 
+2 bash运行 然后输入密码（记住密码后面登录jupyterlab会让输入密码） 然后会生成加密字符串
 ```python3
 $ python3 -c 'from notebook.auth import passwd; print(passwd())'
 ```
+3 修改.env中的 加密字符串
 vim .env 
 Change `ACCESS_TOKEN` in `.env`.
 
@@ -24,7 +25,7 @@ $ docker-compose up --build -d
 ```sh
 $ docker-compose stop
 $ docker-compose build
-$ docker-compose up
+$ docker-compose up -d
 ```
 
 为了方便管理，讲服务加入systemctl管理：
