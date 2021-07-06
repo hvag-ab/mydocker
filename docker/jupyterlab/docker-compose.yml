@@ -21,7 +21,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     ports:
-      - 80:80
+      - 9998:80
     networks:
       - jupyternet
     depends_on:
