@@ -23,8 +23,10 @@ $ docker-compose up --build -d
 5 确认防火墙是否开启了9998端口  9998是docker-compose.yml nginx映射到宿主机的端口号
 防火墙开放端口
 可以先试一下能否访问到，如果访问不到可能是防火墙未开放相关端口（默认是8888端口），先使用firewall-cmd --state查看防火墙状态，确认防火墙是开启的。此时需要使用root身份或者用sudo。
+```
 firewall-cmd --permanent --zone=public --add-port=9998/tcp
 firewall-cmd --reload
+```
 永久开放tcp 8888端口并重新载入。
 
 ## Update container
