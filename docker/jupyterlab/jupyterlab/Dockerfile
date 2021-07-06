@@ -1,16 +1,6 @@
-FROM ubuntu:20.04
+FROM python:3.8
 
-# Requirements
-RUN apt -y update && apt -y install \
-      curl
-
-# Python
-RUN apt -y update && apt -y install \
-      python3 \
-      python3-pip \
-      python3-dev
-
-RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple/ jupyterlab \
+RUN pip3 install -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com jupyterlab \
      && jupyter notebook --generate-config
 
 WORKDIR /root/.jupyter
@@ -20,9 +10,11 @@ RUN mkdir /anaconda && cd /anaconda
 WORKDIR /anaconda
 
 # Python packages
-#RUN pip3 install pycrypto
-#RUN pip3 install numpy
-#RUN pip3 install sympy
+#RUN pip3 install pandas -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+#RUN pip3 install scipy -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+#RUN pip3 install matplotlib -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+#RUN pip3 install numpy -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+#RUN pip3 install sympy -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
 
 
 EXPOSE 8888
