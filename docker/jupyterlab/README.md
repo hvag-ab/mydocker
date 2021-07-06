@@ -13,7 +13,7 @@ $ python3 -c 'from notebook.auth import passwd; print(passwd())'
 ```
 3 修改.env中的 加密字符串
 vim .env 
-Change `ACCESS_TOKEN` in `.env`.
+ACCESS_TOKEN=加密字符串
 
 ```sh
 $ docker-compose up --build -d
