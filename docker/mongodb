@@ -33,7 +33,8 @@ mongodb的认证约束
 在启动容器时添加--auth参数
 docker run --name <container_name> -d mongo --auth
 docker exec -it <container_name> mongo admin
-db.createUser({user:"username",pwd:"ini_password",roles:[{role:"userAdminAnyDatabase",db:"admin"}]})
+db.createUser({ user:'admin',pwd:'123456',roles:[ { role:'userAdminAnyDatabase', db: 'admin'},"readWriteAnyDatabase"]});
+db.auth('admin', '123456')
 
 
 命令说明：
