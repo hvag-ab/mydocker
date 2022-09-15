@@ -1,0 +1,64 @@
+rsync 备份文件工具 
+
+.\rsync.exe -azvP --password-file=/cygdrive/d/mima.txt admin@you_ip::volume /cygdrive/d/www
+
+.\rsync.exe --dry-run -rcnC --out-format="%n"  /cygdrive/d/www/ --password-file=/cygdrive/d/mima.txt admin@you_ip::volume
+
+
+rsync --daemon --config=/etc/rsyncd.conf
+
+docker pull axiom/rsync-server
+
+docker run -d \
+    -p 873:873 \
+    -v /server/hvag:/myvolume \
+    -e USERNAME=admin \
+    -e PASSWORD=mysecret \
+    -e VOLUME=/myvolume \
+    axiom/rsync-server
+    
+
+备份代码 （首先客户端需要安装rsync 客户端工具）
+back_temp = r'{rsync_dir}\rsync.exe -azvP --password-file=/cygdrive/{mima_dir}/mima.txt rsync://admin@you_ip:{port}/{rsync_name} /cygdrive/{back_dir}'
+diff_temp = r'{rsync_dir}\rsync.exe --dry-run -rcnC --out-format="%n"  /cygdrive/{back_dir}/ --password-file=/cygdrive/{mima_dir}/mima.txt rsync://admin@you_ip:{port}/{rsync_name}'
+
+
+def back_file(rsync_dir,rsync_name,mima_dir,back_dir,port=873):
+    try:
+        cmd = back_temp.format(rsync_dir=rsync_dir,rsync_name=rsync_name,mima_dir=mima_dir,back_dir=back_dir,port=port)
+        print(cmd)
+        status,output = subprocess.getstatusoutput(cmd)
+        print(status)
+        print(output)
+        if status != 0:
+            logger.error(str(output))
+        else:
+            logger.info('备份完成')
+    except Exception as e:
+        logger.exception(e)
+
+
+
+def diff_dir(rsync_dir,rsync_name,mima_dir,back_dir,back_dir2,port=873,del_day=2):
+    try:
+        cmd = diff_temp.format(rsync_dir=rsync_dir,rsync_name=rsync_name,mima_dir=mima_dir,back_dir=back_dir,port=port)
+        status,output = subprocess.getstatusoutput(cmd)
+        print(status)
+        print(output)
+        if status == 0:
+            output = output.split('\n')
+            now = datetime.datetime.now()
+            for file in output:
+                f = Path(back_dir2) / file
+                stat = f.stat()
+                mtime = stat.st_mtime
+                datetime_obj = datetime.datetime.fromtimestamp(mtime)
+                delta = now - datetime_obj
+                if del_day < delta.days:
+                    f.unlink()
+                    print(f'删除这个文件 {f}')
+                    logger.info(f'删除这个文件 {f}')
+        else:
+            logger.error(str(output))
+    except Exception as e:
+        logger.exception(e)
