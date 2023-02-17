@@ -1,0 +1,11 @@
+docker run --name postgres \
+    --restart=always \
+    -e POSTGRES_PASSWORD=password \
+    -p 5432:5432 \
+    -v $HOME/docker/data/postgresql:/var/lib/postgresql/data \
+    -d postgres
+
+注意：
+postgres镜像默认的用户名为postgres，
+登陆口令为创建容器是指定的值。
+$ docker exec -it postgres /bin/bash
