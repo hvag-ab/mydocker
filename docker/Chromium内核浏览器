@@ -6,7 +6,7 @@ docker pull seleniarm/standalone-chromium
 
 
 运行image
-docker run -d -p 4444:4444 selenium/standalone-chrome
+docker run -d -p 4444:4444 容器名
 
 
 浏览器地址输入
