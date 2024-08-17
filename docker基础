@@ -521,4 +521,8 @@ docker ps -aqf "name=containername"
 本机文件可以同步到容器
 docker cp hello.py 容器id:/home
 
+docker pull 遇到 no matching manifest for linux/arm64/v8 in the manifest list entries
+问题出在mac 上面m1 芯片不兼容 需要下载兼容的镜像
+docker pull --platform linux/x86_64 your_image
+
 
