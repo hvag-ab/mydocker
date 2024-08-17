@@ -1,0 +1,13 @@
+windows  linux 
+docker pull selenium/standalone-chrome
+
+mac m1
+docker pull seleniarm/standalone-chromium
+
+
+运行image
+docker run -d -p 4444:4444 selenium/standalone-chrome
+
+
+浏览器地址输入
+ip:4444/ 访问
