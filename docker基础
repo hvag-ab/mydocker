@@ -525,4 +525,7 @@ docker pull 遇到 no matching manifest for linux/arm64/v8 in the manifest list 
 问题出在mac 上面m1 芯片不兼容 需要下载兼容的镜像
 docker pull --platform linux/x86_64 your_image
 
+通过容器名称删除容器 正则
+docker rm $(docker ps -a | grep 'your-container-name-pattern' | awk '{print $1}')
+
 
